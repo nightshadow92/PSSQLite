@@ -3,25 +3,25 @@ function Update-Sqlite {
 
 	param(
 		[Parameter()]
-		[string]
-		$version = '1.0.112',
-	
+		[System.Version]
+		$version = '1.0.118',
+
 		[Parameter()]
 		[ValidateSet('linux-x64','osx-x64','win-x64','win-x86')]
-		[string]
-		$OS
+		[string[]]
+		$OS = ('linux-x64','osx-x64','win-x64','win-x86')
 	)
-	
+
 	Process {
 	write-verbose "Creating build directory"
 	New-Item -ItemType directory build
 	Set-Location build
-	
-	$file = "system.data.sqlite.core.$version"
+
+	$file = "stub.system.data.sqlite.core.netstandard.$version"
 
 	write-verbose "downloading files from nuget"
 	$dl = @{
-		uri = "https://www.nuget.org/api/v2/package/System.Data.SQLite.Core/$version"
+		uri = "https://www.nuget.org/api/v2/package/Stub.System.Data.SQLite.Core.NetStandard/$version"
 		outfile = "$file.nupkg"
 	}
 	Invoke-WebRequest @dl
@@ -30,8 +30,10 @@ function Update-Sqlite {
 	Expand-Archive $dl.outfile
 
 	$InstallPath = (get-module PSSQlite).path.TrimEnd('PSSQLite.psm1')
-	copy-item $file/lib/netstandard2.0/System.Data.SQLite.dll $InstallPath/core/$os/
-	copy-item $file/runtimes/$os/native/netstandard2.0/SQLite.Interop.dll $InstallPath/core/$os/
+	foreach($o in $OS){
+		copy-item $file/lib/netstandard2.0/System.Data.SQLite.dll $InstallPath/core/$o/
+		copy-item $file/runtimes/$o/native/SQLite.Interop.dll $InstallPath/core/$o/
+	}
 
 	write-verbose "removing build folder"
 	Set-location ..
